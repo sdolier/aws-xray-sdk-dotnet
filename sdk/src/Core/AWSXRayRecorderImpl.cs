@@ -381,15 +381,36 @@ namespace Amazon.XRay.Recorder.Core
             if (newSegment.Aws.TryGetValue("xray", out object value))
             {
                 xrayContext = (ConcurrentDictionary<string, string>)value;
-                xrayContext[ruleNameKey] = ruleName;
+                try 
+                { 
+                    xrayContext[ruleNameKey] = ruleName;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error adding rule name to existing xray context", ex);
+                }
             }
             else
             {
                 xrayContext = new ConcurrentDictionary<string, string>();
-                xrayContext[ruleNameKey] = ruleName;
+                try
+                {
+                    xrayContext[ruleNameKey] = ruleName;
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Error adding rule name to new xray context", ex);
+                }
             }
 
-            newSegment.Aws["xray"] = xrayContext;
+            try
+            { 
+                newSegment.Aws["xray"] = xrayContext;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error setting context to segment", ex);
+            }
         }
 
         /// <summary>
@@ -725,7 +746,7 @@ namespace Amazon.XRay.Recorder.Core
             RuntimeContext = new Dictionary<string, object>();
 
             // Prepare XRay section for runtime context
-            var xrayContext = new Dictionary<string, string>();
+            var xrayContext = new ConcurrentDictionary<string, string>();
 
 #if NET45
             xrayContext["sdk"] = "X-Ray for .NET";
